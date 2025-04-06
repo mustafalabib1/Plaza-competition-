@@ -9,6 +9,14 @@
 #define IN3 21
 #define IN4 22
 
+// Motor Pins (adjust to your wiring)
+#define  rightMotor1  16
+#define  rightMotor2  17
+#define  rightMotorPWM  18
+#define  leftMotor1 19
+#define  leftMotor2 23 
+#define  leftMotorPWM 5
+
 // Servo Pins
 #define BASE_SERVO 13
 #define SHOULDER_SERVO 12
@@ -26,8 +34,8 @@ void setup() {
     Serial.println("Waiting for PS4 Controller...");
 
     // Setup Motor Pins
-    pinMode(ENA, OUTPUT); pinMode(IN1, OUTPUT); pinMode(IN2, OUTPUT);
-    pinMode(ENB, OUTPUT); pinMode(IN3, OUTPUT); pinMode(IN4, OUTPUT);
+    pinMode(leftMotorPWM, OUTPUT); pinMode(leftMotor1, OUTPUT); pinMode(leftMotor2, OUTPUT);
+    pinMode(rightMotorPWM, OUTPUT); pinMode(rightMotor1, OUTPUT); pinMode(rightMotor2, OUTPUT);
 
     // Attach Servos
     base.attach(BASE_SERVO);
@@ -75,11 +83,11 @@ void loop() {
 }
 
 void moveCar(int leftSpeed, int rightSpeed) {
-    digitalWrite(IN1, leftSpeed > 0);
-    digitalWrite(IN2, leftSpeed < 0);
-    analogWrite(ENA, abs(leftSpeed));
+    digitalWrite(leftMotor1, leftSpeed > 0);
+    digitalWrite(leftMotor2, leftSpeed < 0);
+    analogWrite(leftMotorPWM, abs(leftSpeed));
 
-    digitalWrite(IN3, rightSpeed > 0);
-    digitalWrite(IN4, rightSpeed < 0);
-    analogWrite(ENB, abs(rightSpeed));
+    digitalWrite(rightMotor1, rightSpeed > 0);
+    digitalWrite(rightMotor2, rightSpeed < 0);
+    analogWrite(rightMotorPWM, abs(rightSpeed));
 }

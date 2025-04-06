@@ -14,7 +14,7 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 QTRSensors qtr;
 uint16_t sensorValues[NUM_SENSORS];
 
-// Motor Pins (adjust to your wiring)
+// Motors Pins 
 #define  rightMotor1  16
 #define  rightMotor2  17
 #define  rightMotorPWM  18
