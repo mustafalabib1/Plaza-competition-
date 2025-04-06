@@ -3,7 +3,11 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "C:/Users/mosta/.platformio/packages/framework-arduinoespressif32/cores/esp32",
+                "C:/Users/mosta/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/include/freertos/include",
+                "C:/Users/mosta/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/include/freertos/include/esp_additions/freertos",
+                "C:/Users/mosta/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/dio_qspi/include"
             ],
             "defines": [
                 "_DEBUG",

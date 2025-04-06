@@ -1,14 +1,8 @@
+#include <Arduino.h>
+
 #include <PS4Controller.h>
 #include <ESP32Servo.h>
-
-// Motor Driver Pins (L298N)
-#define ENA 5
-#define IN1 18
-#define IN2 19
-#define ENB 23
-#define IN3 21
-#define IN4 22
-
+// pin 21 and 22 are used for I2C, so avoid using them for motors or servos
 // Motor Pins (adjust to your wiring)
 #define  rightMotor1  16
 #define  rightMotor2  17
@@ -25,12 +19,15 @@
 
 Servo base, shoulder, elbow, gripper;
 
+// Function prototypes
+void moveCar(int leftSpeed, int rightSpeed);
+
 // Servo positions
 int basePos = 90, shoulderPos = 90, elbowPos = 90, gripperPos = 90;
 
 void setup() {
     Serial.begin(115200);
-    PS4.begin("5c:96:56:af:ad:a1");  // Replace with ESP32 Bluetooth MAC address
+    PS4.begin("5c:96:56:af:ad:a0");  // Replace with ESP32 Bluetooth MAC address
     Serial.println("Waiting for PS4 Controller...");
 
     // Setup Motor Pins
