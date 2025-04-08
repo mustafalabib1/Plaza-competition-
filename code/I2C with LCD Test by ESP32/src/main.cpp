@@ -14,7 +14,7 @@ void setup() {
 
 void loop() {
   lcd.setCursor(0, 0); // Set the cursor to the first column, first row
-  lcd.print("Mostafa Labib"); // Print message on the first row
+  lcd.print("Mustafa Labib is the best"); // Print message on the first row
   delay(1000); // Wait for 1 second
 
   lcd.clear(); // Clear the display
