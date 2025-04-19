@@ -2,7 +2,7 @@
 
 Servo myServo;
 int servoPin = 9;
-int angle, pre = 0;
+int angle, pre = 90;
 void setup() {
   // put your setup code here, to run once:
   myServo.attach(servoPin);
@@ -11,12 +11,22 @@ void setup() {
 }
 void loop() {
 
-  if (Serial.available()) {
-    int angle = Serial.parseInt();
-    if (angle!=0)
-    pre=angle;
-    else if (angle<0)
-    pre=0;
+  // if (Serial.available()) {
+  //   int angle = Serial.parseInt();
+  //   if (angle!=0)
+  //   pre=angle;
+  //   else if (angle<0)
+  //   pre=0;
+  // }
+  // myServo.write(pre);
+  for (int i = 180; i >= 90; i--) {
+
+    myServo.write(i);
+    delay(15);
   }
-    myServo.write(pre);
+  for (int i = 90; i <= 180; i++) {
+
+    myServo.write(i);
+    delay(15);
+  }
 }

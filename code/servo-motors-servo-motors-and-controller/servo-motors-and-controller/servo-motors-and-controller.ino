@@ -18,10 +18,10 @@
 #define  leftMotorPWM 5
 
 // Servo Pins
-#define BASE_SERVO 13
-#define SHOULDER_SERVO 12
-#define ELBOW_SERVO 14
-#define GRIPPER_SERVO 27
+#define BASE_SERVO 23
+#define SHOULDER_SERVO 22
+#define ELBOW_SERVO 21
+#define GRIPPER_SERVO 19
 
 Servo base, shoulder, elbow, gripper;
 
@@ -46,6 +46,8 @@ void setup() {
 
 void loop() {
     if (PS4.isConnected()) {
+        Serial.println("ps4 is connected");
+
         int speed = abs(PS4.LStickY()) * 2.55;
         int turn = PS4.LStickX();
 
@@ -57,19 +59,23 @@ void loop() {
         else moveCar(0, 0);
 
         // Arm Controls
-        if (PS4.Cross()) basePos += 5;  // Rotate Right
-        if (PS4.Circle()) basePos -= 5; // Rotate Left
-        if (PS4.Triangle()) shoulderPos += 5; // Shoulder Up
-        if (PS4.Square()) shoulderPos -= 5; // Shoulder Down
-        if (PS4.Up()) elbowPos += 5; // Elbow Up
-        if (PS4.Down()) elbowPos -= 5; // Elbow Down
-        if (PS4.R1()) gripperPos += 5; // Open Gripper
-        if (PS4.L1()) gripperPos -= 5; // Close Gripper
+        basePos =90;
+        if (PS4.Cross()) basePos=180;  // Rotate Right
+        if (PS4.Circle()) basePos=0; // Rotate Left
+        
+        if (PS4.data.button.triangle) {shoulderPos += 1;} // Shoulder Up
+        if (PS4.Square()) shoulderPos -= 1;;// Shoulder Down
+
+        if (PS4.Up()) elbowPos += 1; // Elbow Up
+        if (PS4.Down()) elbowPos -= 1; // Elbow Down
+
+        if (PS4.R1()) gripperPos += 10; // Open Gripper
+        if (PS4.L1()) gripperPos -= 10; // Close Gripper
 
         // Limit servo range
         basePos = constrain(basePos, 0, 180);
         shoulderPos = constrain(shoulderPos, 0, 180);
-        elbowPos = constrain(elbowPos, 0, 180);
+        elbowPos = constrain(elbowPos, 90, 180);
         gripperPos = constrain(gripperPos, 0, 180);
 
         // Move servos
