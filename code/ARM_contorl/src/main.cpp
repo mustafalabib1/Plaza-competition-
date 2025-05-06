@@ -1,99 +1,124 @@
-#include <Arduino.h>
-
 #include <PS4Controller.h>
 #include <ESP32Servo.h>
-#include <BluetoothSerial.h>
 
-// Motor Pins (adjust to your wiring)
-#define  rightMotor1  12
-#define  rightMotor2  14
-#define  rightMotorPWM  12
-#define  leftMotor1 25
-#define  leftMotor2 26
-#define  leftMotorPWM 33
+// Motor Driver Pins (L298N)
+#define ENA 12
+#define IN3 27
+#define IN4 14
 
-//d15 y
-//d2 o
-//d18 black 
-// d19 blue 
+#define IN1 25
+#define IN2 26
+
+#define ENB 33
+
+#define Front_Motor_EN 13
+#define Front_Motor_ENA 18
+#define Front_Motor_ENB 19
+
+// // Sensor Pins
+// #define FarLeft_SENSOR 16
+// #define LEFT_SENSOR 17
+// #define MIDDLE_SENSOR 32
+// #define Right_SENSOR 35
+// #define FarRight_SENSOR 34
 
 // Servo Pins
-#define BASE_SERVO 19
-#define SHOULDER_SERVO 15
-#define ELBOW_SERVO 18
-#define GRIPPER_SERVO 2
+#define BASE_SERVO 15     //رمادي
+#define SHOULDER_SERVO 2  //بني 
+#define ELBOW_SERVO 5     //برتقالي 
+#define GRIPPER_SERVO 4   //ابيض
 
 Servo base, shoulder, elbow, gripper;
 
 // Servo positions
-int basePos = 90, shoulderPos = 90, elbowPos = 30, gripperPos = 90;
+int basePos = 90, shoulderPos = 90, elbowPos = 15, gripperPos = 90;
+void moveCar(int leftSpeed, int rightSpeed) ;
 
 void setup() {
-    Serial.begin(115200);
-    PS4.begin("5c:96:56:af:ad:a0");  // Replace with ESP32 Bluetooth MAC address
-    Serial.println("Waiting for PS4 Controller...");
+  Serial.begin(115200);
+  PS4.begin("5c:96:56:af:ad:a0");  // Replace with your ESP32's MAC address
+  Serial.println("Waiting for PS4 Controller...");
 
-    // Setup Motor Pins
-    pinMode(leftMotorPWM, OUTPUT); pinMode(leftMotor1, OUTPUT); pinMode(leftMotor2, OUTPUT);
-    pinMode(rightMotorPWM, OUTPUT); pinMode(rightMotor1, OUTPUT); pinMode(rightMotor2, OUTPUT);
+  // Motor Pins Setup
+  pinMode(ENB, OUTPUT);
+  pinMode(IN3, OUTPUT);
+  pinMode(IN4, OUTPUT);
+  pinMode(ENA, OUTPUT);
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+  pinMode(Front_Motor_EN, OUTPUT);
+  pinMode(Front_Motor_ENA, OUTPUT);
+  pinMode(Front_Motor_ENB, OUTPUT);
 
-    // Attach Servos
-    base.attach(BASE_SERVO);
-    shoulder.attach(SHOULDER_SERVO);
-    elbow.attach(ELBOW_SERVO);
-    gripper.attach(GRIPPER_SERVO);
+  // Attach Servos
+  base.attach(BASE_SERVO);
+  shoulder.attach(SHOULDER_SERVO);
+  elbow.attach(ELBOW_SERVO);
+  gripper.attach(GRIPPER_SERVO);
 }
 
 void loop() {
-    if (PS4.isConnected()) {
-        Serial.println("ps4 is connected");
+  if (PS4.isConnected()) {
+    // Front Motor Control (R1 trigger)
+    digitalWrite(Front_Motor_EN, PS4.R1());
 
-        int speed = abs(PS4.LStickY()) * 2.55;
-        int turn = PS4.LStickX();
+    // Replace the existing movement logic with:
+    float deadzone = 0.15f;  // 15% deadzone
+    float y = constrain(-PS4.LStickY() / 127.0f, -1.0f, 1.0f);
+    float x = constrain(PS4.LStickX() / 127.0f, -1.0f, 1.0f);
 
-        // Car Movement
-        if (PS4.LStickY() < -10) moveCar(speed, speed);
-        else if (PS4.LStickY() > 10) moveCar(-speed, -speed);
-        else if (PS4.LStickX() < -10) moveCar(-speed, speed);
-        else if (PS4.LStickX() > 10) moveCar(speed, -speed);
-        else moveCar(0, 0);
+    // Apply deadzone
+    if (fabs(y) < deadzone) y = 0;
+    if (fabs(x) < deadzone) x = 0;
 
-        // Arm Controls
-        basePos =90;
-        if (PS4.Cross()) basePos=180;  // Rotate Right
-        if (PS4.Circle()) basePos=0; // Rotate Left
-        
-        if (PS4.data.button.triangle) {shoulderPos += 1;} // Shoulder Up
-        if (PS4.Square()) shoulderPos -= 1;;// Shoulder Down
+    // Non-linear response curve
+    y = y * fabs(y);  // Square the input for better control
+    x = x * fabs(x);
 
-        if (PS4.Up()) elbowPos += 5; // Elbow Up
-        if (PS4.Down()) elbowPos -= 5; // Elbow Down
+    // Mixing algorithm for differential drive
+    int leftSpeed = constrain((y + x) * 255, -255, 255);
+    int rightSpeed = constrain((y - x) * 255, -255, 255);
 
-        if (PS4.R1()) gripperPos += 10; // Open Gripper
-        if (PS4.L1()) gripperPos -= 10; // Close Gripper
+    moveCar(leftSpeed, rightSpeed);
 
-        // Limit servo range
-        basePos = constrain(basePos, 0, 180);
-        shoulderPos = constrain(shoulderPos, 0, 180);
-        elbowPos = constrain(elbowPos, 90, 180);
-        gripperPos = constrain(gripperPos, 0, 180);
+    // --- Existing Arm Control Logic (unchanged) ---
+    basePos = 90;
+    if (PS4.R2()) basePos = 150;
+    if (PS4.L2()) basePos = 30;
 
-        // Move servos
-        base.write(basePos);
-        shoulder.write(shoulderPos);
-        elbow.write(elbowPos);
-        gripper.write(gripperPos);
+    if (PS4.Triangle()) shoulderPos += 1;
+    if (PS4.Square()) shoulderPos -= 1;
 
-        delay(100);
-    }
+    if (PS4.Up()) elbowPos += 1;
+    if (PS4.Down()) elbowPos -= 1;
+
+    if (PS4.Circle()) gripperPos += 10;
+    if (PS4.Cross()) gripperPos -= 10;
+
+    basePos = constrain(basePos, 0, 180);
+    shoulderPos = constrain(shoulderPos, 80, 180);
+    elbowPos = constrain(elbowPos, 0, 90);
+    gripperPos = constrain(gripperPos, 0, 180);
+
+    base.write(basePos);
+    shoulder.write(shoulderPos);
+    elbow.write(elbowPos);
+    gripper.write(gripperPos);
+
+    delay(10);
+  }
 }
 
 void moveCar(int leftSpeed, int rightSpeed) {
-    digitalWrite(leftMotor1, leftSpeed > 0);
-    digitalWrite(leftMotor2, leftSpeed < 0);
-    analogWrite(leftMotorPWM, abs(leftSpeed));
+  // Left Motor Control
+  digitalWrite(IN3, leftSpeed > 0);
+  digitalWrite(IN4, leftSpeed < 0);
+  analogWrite(ENB, abs(leftSpeed));
+  analogWrite(Front_Motor_ENB, abs(leftSpeed));
 
-    digitalWrite(rightMotor1, rightSpeed > 0);
-    digitalWrite(rightMotor2, rightSpeed < 0);
-    analogWrite(rightMotorPWM, abs(rightSpeed));
+  // Right Motor Control
+  digitalWrite(IN1, rightSpeed > 0);
+  digitalWrite(IN2, rightSpeed < 0);
+  analogWrite(ENA, abs(rightSpeed));
+  analogWrite(Front_Motor_ENA, abs(rightSpeed));
 }
